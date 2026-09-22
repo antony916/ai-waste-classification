@@ -4,5 +4,6 @@ datasets
 scikit-learn
 pillow
 numpy
+matplotlib
 streamlit
 tqdm
