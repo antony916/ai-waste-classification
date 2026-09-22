@@ -1,4 +1,5 @@
 DATASET_NAME = "garythung/trashnet"
+DATASET_ARCHIVE = "dataset-resized.zip"
 IMAGE_SIZE = 224
 BATCH_SIZE = 32
 EPOCHS = 12
