@@ -11,8 +11,6 @@ from src.model import build_model
 
 ROOT = Path(__file__).resolve().parent
 
-theme_mode = getattr(st.context.theme, "type", "light") or "light"
-
 st.set_page_config(
     page_title="Waste AI | Smart Classification",
     page_icon="♻️",
@@ -20,9 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-
-if theme_mode == "dark":
-    st.markdown("""<style>:root{--app-bg:#0D1713;--surface:#16231D;--surface-soft:#183A2A;--text:#ECF7F0;--muted:#AFC2B7;--border:#2D4539;--accent:#49C982;--accent-dark:#8BE0B2;--accent-soft:#214C36;--shadow:rgba(0,0,0,.24);--warning-bg:#332A16;--warning-border:#66552C;--warning-text:#F3D98D;}</style>""", unsafe_allow_html=True)
+theme_mode = getattr(st.context.theme, "type", "light") or "light"
 
 st.markdown(
     """
@@ -45,7 +41,7 @@ st.markdown(
 .stApp { background: var(--app-bg); color: var(--text); }
 .block-container { max-width: 1240px; padding: 1.75rem 2rem 4rem; }
 [data-testid="stHeader"] { background: var(--app-bg); }
-[data-testid="stSidebar"] { background: ${"#09110E" if theme_mode == "dark" else "#102F24"}; border-right: 0; }
+[data-testid="stSidebar"] { background: #102F24; border-right: 0; }
 [data-testid="stSidebar"] * { color: #EDF8F2 !important; }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.12); }
 
@@ -108,6 +104,31 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+if theme_mode == "dark":
+    st.markdown("""
+<style>
+.stApp { background:#0D1713; color:#ECF7F0; }
+[data-testid="stHeader"] { background:#0D1713; }
+.section-title { color:#ECF7F0; }
+.section-subtitle { color:#AFC2B7; }
+.card,.stat-card { background:#16231D; border-color:#2D4539; }
+.step-card { background:#183A2A; border-color:#2D4539; }
+.step-title { color:#ECF7F0; }
+.step-text,.stat-label,.result-label { color:#AFC2B7; }
+.stat-value,.result-name { color:#8BE0B2; }
+[data-testid="stFileUploader"] { background:#16231D; border-color:#3B7458; }
+[data-testid="stFileUploaderDropzone"] { background:#183A2A; }
+.result-card { background:linear-gradient(135deg,#16231D 0%,#183A2A 100%); border-color:#2D4539; }
+.pill { background:#214C36; color:#8BE0B2; }
+.info-box { background:#183A2A; border-color:#2D4539; color:#ECF7F0; }
+.warning-box { background:#332A16; border-color:#66552C; color:#F3D98D; }
+[data-testid="stMetric"] { background:#16231D; border-color:#2D4539; }
+[data-testid="stMetricLabel"] { color:#AFC2B7 !important; }
+[data-testid="stMetricValue"] { color:#ECF7F0 !important; }
+.footer-note { color:#8FA69A; }
+</style>
+""", unsafe_allow_html=True)
 
 
 @st.cache_resource
