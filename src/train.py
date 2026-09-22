@@ -5,11 +5,10 @@ import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from datasets import load_dataset
 from tqdm import tqdm
 
-from config import BATCH_SIZE, CLASS_NAMES_PATH, DATASET_NAME, EPOCHS, LEARNING_RATE, MODEL_PATH, NUM_WORKERS, SEED
-from src.data import WasteDataset, split_rows
+from config import BATCH_SIZE, CLASS_NAMES_PATH, EPOCHS, LEARNING_RATE, MODEL_PATH, NUM_WORKERS, SEED
+from src.data import WasteDataset, prepare_dataset, split_rows
 from src.model import build_model
 
 
@@ -52,17 +51,29 @@ def main():
     if torch.cuda.is_available():
         print(f"GPU: {torch.cuda.get_device_name(0)}")
 
-    print(f"Loading dataset: {DATASET_NAME}")
-    dataset = load_dataset(DATASET_NAME, split="train")
-    class_names = dataset.features["label"].names
+    print("Preparing TrashNet resized image dataset...")
+    rows, class_names = prepare_dataset()
     with open(CLASS_NAMES_PATH, "w", encoding="utf-8") as file:
         file.write("\n".join(class_names))
 
-    train_rows, val_rows, test_rows = split_rows(dataset, SEED)
+    train_rows, val_rows, test_rows = split_rows(rows, SEED)
+    print(f"Dataset samples: {len(rows)}")
     print(f"Split sizes: train={len(train_rows)}, validation={len(val_rows)}, test={len(test_rows)}")
 
-    train_loader = DataLoader(WasteDataset(train_rows, train=True), batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, pin_memory=torch.cuda.is_available())
-    val_loader = DataLoader(WasteDataset(val_rows), batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS, pin_memory=torch.cuda.is_available())
+    train_loader = DataLoader(
+        WasteDataset(train_rows, train=True),
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        num_workers=NUM_WORKERS,
+        pin_memory=torch.cuda.is_available(),
+    )
+    val_loader = DataLoader(
+        WasteDataset(val_rows),
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        num_workers=NUM_WORKERS,
+        pin_memory=torch.cuda.is_available(),
+    )
 
     model = build_model(len(class_names)).to(device)
     loss_fn = nn.CrossEntropyLoss()
@@ -72,7 +83,11 @@ def main():
     for epoch in range(EPOCHS):
         train_loss, train_acc = run_epoch(model, train_loader, loss_fn, optimizer, device, True)
         val_loss, val_acc = run_epoch(model, val_loader, loss_fn, optimizer, device, False)
-        print(f"Epoch {epoch + 1}/{EPOCHS} | train_loss={train_loss:.4f} train_acc={train_acc:.4f} | val_loss={val_loss:.4f} val_acc={val_acc:.4f}")
+        print(
+            f"Epoch {epoch + 1}/{EPOCHS} | "
+            f"train_loss={train_loss:.4f} train_acc={train_acc:.4f} | "
+            f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
+        )
         if val_acc > best_val:
             best_val = val_acc
             torch.save(model.state_dict(), MODEL_PATH)
