@@ -44,6 +44,20 @@ st.markdown(
 [data-testid="stSidebar"] { background: #102F24; border-right: 0; }
 [data-testid="stSidebar"] * { color: #EDF8F2 !important; }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.12); }
+[data-testid="stSidebar"] [data-testid="stMetric"] {
+    background: #163B2C;
+    border: 1px solid #28513F;
+    border-radius: 14px;
+}
+[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
+    color: #B8D5C5 !important;
+}
+[data-testid="stSidebar"] [data-testid="stMetricValue"] {
+    color: #F3FFF8 !important;
+}
+[data-testid="stSidebar"] [data-testid="stMetricDelta"] {
+    color: #8BE0B2 !important;
+}
 
 .hero {
     position: relative; overflow: hidden;
@@ -127,6 +141,16 @@ if theme_mode == "dark":
 [data-testid="stMetricLabel"] { color:#AFC2B7 !important; }
 [data-testid="stMetricValue"] { color:#ECF7F0 !important; }
 .footer-note { color:#8FA69A; }
+[data-testid="stSidebar"] [data-testid="stMetric"] {
+    background:#122019;
+    border-color:#294236;
+}
+[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
+    color:#AFC2B7 !important;
+}
+[data-testid="stSidebar"] [data-testid="stMetricValue"] {
+    color:#ECF7F0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
