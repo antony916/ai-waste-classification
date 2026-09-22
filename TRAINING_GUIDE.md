@@ -1,24 +1,34 @@
-# Training Guide
+# Training Guide — AI Waste Classification
 
-## 1. Create a Python environment
-Python 3.12 is recommended.
+## Environment
+Use Python 3.12 and install requirements.
 
-## 2. Install dependencies
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
-## 3. Train
-```bash
+## Train
+```powershell
+$env:PYTHONPATH="."
 python src/train.py
 ```
 
-The script automatically uses CUDA when PyTorch detects an NVIDIA GPU.
+The script downloads TrashNet, creates a reproducible 80/10/10 split, applies augmentation, fine-tunes MobileNetV3-Large, uses CUDA when available, and saves the best validation checkpoint.
 
-## 4. Run the web app
-```bash
+## Evaluate
+```powershell
+$env:PYTHONPATH="."
+python src/evaluate.py
+```
+
+This reports accuracy, weighted precision, weighted recall and weighted F1 and creates a confusion matrix.
+
+## Run the app
+```powershell
 streamlit run app.py
 ```
 
-## 5. Academic note
-Do not claim an accuracy value until the model has actually been trained and evaluated. Record the printed validation/test metrics in the report.
+Every new upload triggers the visible checking/preprocessing/AI-analysis sequence.
+
+## Academic reporting
+Only use metrics printed by evaluate.py in the final report and presentation.
