@@ -122,28 +122,71 @@ st.markdown(
 if theme_mode == "dark":
     st.markdown("""
 <style>
-.stApp { background:#0D1713; color:#ECF7F0; }
-[data-testid="stHeader"] { background:#0D1713; }
-.section-title { color:#ECF7F0; }
-.section-subtitle { color:#AFC2B7; }
-.card,.stat-card { background:#16231D; border-color:#2D4539; }
-.step-card { background:#183A2A; border-color:#2D4539; }
-.step-title { color:#ECF7F0; }
-.step-text,.stat-label,.result-label { color:#AFC2B7; }
-.stat-value,.result-name { color:#8BE0B2; }
-[data-testid="stFileUploader"] { background:#16231D; border-color:#3B7458; }
-[data-testid="stFileUploaderDropzone"] { background:#183A2A; }
-.result-card { background:linear-gradient(135deg,#16231D 0%,#183A2A 100%); border-color:#2D4539; }
-.pill { background:#214C36; color:#8BE0B2; }
-.info-box { background:#183A2A; border-color:#2D4539; color:#ECF7F0; }
-.warning-box { background:#332A16; border-color:#66552C; color:#F3D98D; }
-[data-testid="stMetric"] { background:#16231D; border-color:#2D4539; }
+.stApp { background:#0D1713 !important; color:#ECF7F0 !important; }
+[data-testid="stHeader"] { background:#0D1713 !important; }
+.main, [data-testid="stAppViewContainer"] { background:#0D1713 !important; }
+.section-title { color:#ECF7F0 !important; }
+.section-subtitle { color:#AFC2B7 !important; }
+
+.card,.stat-card {
+    background:#16231D !important;
+    border-color:#2D4539 !important;
+}
+.step-card {
+    background:#183A2A !important;
+    border-color:#2D4539 !important;
+}
+.step-title { color:#ECF7F0 !important; }
+.step-text,.stat-label,.result-label { color:#AFC2B7 !important; }
+.stat-value,.result-name { color:#8BE0B2 !important; }
+
+[data-testid="stFileUploader"] {
+    background:#16231D !important;
+    border-color:#3B7458 !important;
+}
+[data-testid="stFileUploaderDropzone"] {
+    background:#183A2A !important;
+    border-color:#3B7458 !important;
+}
+[data-testid="stFileUploader"] label,
+[data-testid="stFileUploader"] label *,
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] p {
+    color:#D9F2E4 !important;
+}
+[data-testid="stFileUploader"] button {
+    background:#49C982 !important;
+    color:#082116 !important;
+    border:1px solid #69D99A !important;
+}
+[data-testid="stFileUploader"] button *,
+[data-testid="stFileUploader"] button span {
+    color:#082116 !important;
+}
+[data-testid="stFileUploader"] svg {
+    fill:#49C982 !important;
+    color:#49C982 !important;
+}
+[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] {
+    color:#D9F2E4 !important;
+}
+
+.result-card {
+    background:linear-gradient(135deg,#16231D 0%,#183A2A 100%) !important;
+    border-color:#2D4539 !important;
+}
+.pill { background:#214C36 !important; color:#8BE0B2 !important; }
+.info-box { background:#183A2A !important; border-color:#2D4539 !important; color:#ECF7F0 !important; }
+.warning-box { background:#332A16 !important; border-color:#66552C !important; color:#F3D98D !important; }
+[data-testid="stMetric"] { background:#16231D !important; border-color:#2D4539 !important; }
 [data-testid="stMetricLabel"] { color:#AFC2B7 !important; }
 [data-testid="stMetricValue"] { color:#ECF7F0 !important; }
-.footer-note { color:#8FA69A; }
+.footer-note { color:#8FA69A !important; }
+
 [data-testid="stSidebar"] [data-testid="stMetric"] {
-    background:#122019;
-    border-color:#294236;
+    background:#122019 !important;
+    border-color:#294236 !important;
 }
 [data-testid="stSidebar"] [data-testid="stMetricLabel"] {
     color:#AFC2B7 !important;
@@ -193,7 +236,6 @@ if not (ROOT / MODEL_PATH).exists():
     st.stop()
 
 
-# ---------- Sidebar ----------
 with st.sidebar:
     st.markdown("## ♻️ Waste AI")
     st.caption("AI-powered waste screening")
@@ -217,7 +259,6 @@ with st.sidebar:
     )
 
 
-# ---------- Hero ----------
 st.markdown(
     """
 <div class="hero">
@@ -230,7 +271,6 @@ st.markdown(
 )
 
 
-# ---------- Quick stats ----------
 c1, c2, c3, c4 = st.columns(4)
 stats = [
     ("Model", "MobileNetV3-Large"),
@@ -247,7 +287,6 @@ for col, (label, value) in zip((c1, c2, c3, c4), stats):
         )
 
 
-# ---------- How it works ----------
 st.markdown("<div class='section-title'>How it works</div>", unsafe_allow_html=True)
 st.markdown(
     "<div class='section-subtitle'>A simple four-stage computer-vision pipeline.</div>",
@@ -270,7 +309,6 @@ for col, (number, title, description) in zip(step_cols, steps):
         )
 
 
-# ---------- Upload ----------
 st.markdown("<div class='section-title'>Upload a waste image</div>", unsafe_allow_html=True)
 st.markdown(
     "<div class='section-subtitle'>For the clearest result, use a well-lit image where one main waste item is visible.</div>",
@@ -345,7 +383,6 @@ else:
             unsafe_allow_html=True,
         )
 
-    # ---------- Top predictions ----------
     st.markdown("<div class='section-title'>Prediction breakdown</div>", unsafe_allow_html=True)
     st.markdown(
         "<div class='section-subtitle'>The model's five highest probability classes.</div>",
@@ -360,7 +397,6 @@ else:
         with col2:
             st.metric("Score", f"{score * 100:.2f}%")
 
-    # ---------- Guidance ----------
     st.markdown("<div class='section-title'>♻️ Disposal guidance</div>", unsafe_allow_html=True)
     st.markdown(
         f"<div class='info-box'><b>{label.title()}</b><br>{tips.get(label, 'Follow local waste-management guidance.')}</div>",
