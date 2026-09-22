@@ -1,0 +1,7 @@
+DATASET_NAME="garythung/trashnet"
+IMAGE_SIZE=224
+BATCH_SIZE=32
+EPOCHS=12
+LEARNING_RATE=3e-4
+MODEL_PATH="artifacts/waste_mobilenetv3.pth"
+CLASS_NAMES_PATH="artifacts/class_names.txt"
