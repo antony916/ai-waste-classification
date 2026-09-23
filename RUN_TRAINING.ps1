@@ -25,3 +25,4 @@ Write-Host ""
 Write-Host "=== COMPLETE ===" -ForegroundColor Green
 Write-Host "Model: artifacts\waste_mobilenetv3.pth"
 Write-Host "Evaluation outputs: outputs folder"
+Write-Host "Evaluation outputs: outputs folder"
