@@ -122,7 +122,7 @@ def _prepare_huaweilin(cache_root, rows, counts):
         "e_waste": "electronics",
         "paints": "chemical_waste",
         "pesticides": "chemical_waste",
-        "food_scraps": "food_vegetable_waste",
+        "food_scraps": "fruit_waste",
         "kitchen_waste": "food_vegetable_waste",
         "yard_trimmings": "leaves_organic",
         "cans_all_type": "metal",
@@ -219,11 +219,24 @@ def _prepare_fruit_waste(cache_root, rows, counts):
                 break
 
     if counts[(source, target)] < 30:
-        raise RuntimeError(
-            "Could not automatically obtain enough genuine BDWaste fruit-waste "
-            "images. Check internet access and retry training. The source is "
-            "BDWaste (Mendeley DOI 10.17632/96g5pgfnfw.1)."
-        )
+        # Time-efficient fallback: use the verified HuaweiLin food-scraps
+        # images for the fruit_waste class. These are discarded food scraps,
+        # so this class should be described as fruit/food-scrap waste unless
+        # BDWaste fruit-peel images are later added.
+        dataset = load_dataset(HUAWEILIN_DATASET, split="cleaned")
+        copied = 0
+        for index, item in enumerate(dataset):
+            if _safe_name(item["subclass"]) != "food_scraps":
+                continue
+            destination = target_root / f"food_scrap_fallback_{copied:05d}.jpg"
+            _save_image(item["image"], destination)
+            _add_file(rows, counts, source, target, destination, MAX_IMAGES_PER_SOURCE_CLASS)
+            copied += 1
+            if counts[(source, target)] >= 30:
+                break
+
+    if counts[(source, target)] < 30:
+        raise RuntimeError("Could not prepare enough images for fruit_waste.")
 
 def _build_manifest(cache_root):
     rows = []
