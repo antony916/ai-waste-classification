@@ -82,7 +82,6 @@ def _prepare_cpoisson(cache_root, rows, counts):
     source = "cpoisson"
     dataset = load_dataset(
         CPOISSON_DATASET,
-        data_dir="dataset",
         split="train",
     )
     label_names = dataset.features["label"].names
