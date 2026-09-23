@@ -6,7 +6,7 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from config import CLASS_NAMES_PATH, IMAGE_SIZE, MODEL_PATH
+from config import CLASS_NAMES, CLASS_NAMES_PATH, IMAGE_SIZE, MODEL_PATH
 from src.model import build_model
 
 ROOT = Path(__file__).resolve().parent
@@ -128,6 +128,8 @@ def get_model():
         if x.strip()
     ]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if len(classes) != len(CLASS_NAMES):
+        raise RuntimeError("The saved model uses an older class configuration. Run the new 14-class training first.")
     model = build_model(len(classes)).to(device)
     model.load_state_dict(torch.load(ROOT / MODEL_PATH, map_location=device))
     model.eval()
@@ -148,7 +150,15 @@ tips = {
     "metal": "Separate metal items for recycling where collection is available.",
     "paper": "Keep paper clean and dry. Avoid mixing heavily contaminated paper with recyclable paper.",
     "plastic": "Check the plastic type and your local recycling rules. Not every plastic item is accepted everywhere.",
-    "trash": "This class represents general residual waste. Follow local municipal disposal guidance.",
+    "trash": "This is general residual waste. Follow your local municipal disposal guidance.",
+    "food_vegetable_waste": "Keep food and vegetable waste separate from recyclable materials. Follow local organic-waste rules.",
+    "fruit_waste": "Fruit scraps and rinds should normally go to the local organic or composting stream where available.",
+    "leaves_organic": "Leaves and garden organic waste are commonly handled through green-waste or composting services.",
+    "clothes": "Keep usable clothing for reuse or donation. Damaged textiles should use a textile collection stream where available.",
+    "batteries": "Do not place batteries in ordinary household waste. Use an authorized battery or e-waste collection point.",
+    "electronics": "Keep electronic waste separate and use an authorized e-waste collection or recycling service.",
+    "wood": "Separate clean wood from mixed waste and follow local bulk-waste or wood-recycling guidance.",
+    "chemical_waste": "Treat this as potentially hazardous waste. Do not mix or pour it into drains; use an authorized hazardous-waste collection service.",
 }
 
 
@@ -166,13 +176,13 @@ with st.sidebar:
     st.markdown("### Model")
     st.write("**Architecture:** MobileNetV3-Large")
     st.write("**Input:** 224 × 224")
-    st.write("**Classes:** 6")
+    st.write("**Classes:** 14")
     st.write("**Device:** CUDA" if torch.cuda.is_available() else "**Device:** CPU")
 
     st.markdown("---")
     st.markdown("### Test performance")
-    st.metric("Test accuracy", "92.49%")
-    st.caption("Evaluated on 253 held-out test images.")
+    st.metric("Test accuracy", "Pending retraining")
+    st.caption("New 14-class metrics will appear after retraining.")
 
     st.markdown("---")
     st.caption(
@@ -186,7 +196,7 @@ st.markdown(
 <div class="hero">
     <div class="hero-kicker">AI + Computer Vision</div>
     <h1>Smart Waste Classification</h1>
-    <p>Upload a waste image and let a trained MobileNetV3-Large model identify its category and provide general disposal guidance.</p>
+    <p>Upload a waste image and let a trained MobileNetV3-Large model identify one of 14 waste categories and provide general disposal guidance.</p>
 </div>
 """,
     unsafe_allow_html=True,
@@ -197,8 +207,8 @@ c1, c2, c3, c4 = st.columns(4)
 stats = [
     ("Model", "MobileNetV3-Large"),
     ("Input", "224 × 224"),
-    ("Categories", "6 waste types"),
-    ("Test accuracy", "92.49%"),
+    ("Categories", "14 waste types"),
+    ("Test accuracy", "Pending retraining"),
 ]
 for col, (label, value) in zip((c1, c2, c3, c4), stats):
     with col:
