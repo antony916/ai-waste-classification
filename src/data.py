@@ -91,12 +91,8 @@ def _prepare_cpoisson_targeted(cache_root, rows, counts):
             repo_type="dataset",
             local_dir=str(cache_root / source / "raw"),
             allow_patterns=[
-                "dataset/wood/*.jpg",
-                "dataset/wood/*.jpeg",
-                "dataset/wood/*.png",
-                "dataset/wood/*.webp",
-                "dataset/textile_trash/*.jpg", "dataset/textile_trash/*.jpeg",
-                "dataset/textile_trash/*.png", "dataset/textile_trash/*.webp",
+                "dataset/wood/*",
+                "dataset/textile_trash/*",
             ],
         )
     )
