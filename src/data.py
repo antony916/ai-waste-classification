@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PIL import Image
 from datasets import load_dataset
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download, snapshot_download
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -80,11 +80,22 @@ def _prepare_trashnet(cache_root, rows, counts):
 
 def _prepare_cpoisson(cache_root, rows, counts):
     source = "cpoisson"
-    dataset = load_dataset(
-        CPOISSON_DATASET,
-        split="train",
+
+    # Download directly into the project cache instead of the HF global cache.
+    # This avoids Windows symlink privileges (WinError 1314) on local machines.
+    dataset_root = Path(
+        snapshot_download(
+            repo_id=CPOISSON_DATASET,
+            repo_type="dataset",
+            local_dir=str(cache_root / source / "raw"),
+            allow_patterns=[
+                "*.jpg",
+                "*.jpeg",
+                "*.png",
+                "*.webp",
+            ],
+        )
     )
-    label_names = dataset.features["label"].names
 
     mapping = {
         "cardboard": "cardboard",
@@ -101,20 +112,16 @@ def _prepare_cpoisson(cache_root, rows, counts):
         "wood": "wood",
     }
 
-    for index, item in enumerate(dataset):
-        source_label = _safe_name(label_names[item["label"]])
+    for path in dataset_root.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
+            continue
+
+        source_label = _safe_name(path.parent.name)
         target = mapping.get(source_label)
         if not target or counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
             continue
-        image = item["image"]
-        destination = (
-            cache_root
-            / source
-            / target
-            / f"{source}_{target}_{index:06d}.jpg"
-        )
-        _save_image(image, destination)
-        _add_file(rows, counts, source, target, destination, MAX_IMAGES_PER_SOURCE_CLASS)
+
+        _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
 
 
 def _prepare_huaweilin(cache_root, rows, counts):
