@@ -3,7 +3,13 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+    confusion_matrix,
+    precision_recall_fscore_support,
+)
 from torch.utils.data import DataLoader
 
 from config import BATCH_SIZE, CLASS_NAMES_PATH, MODEL_PATH, NUM_WORKERS, SEED
@@ -17,6 +23,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     rows, class_names = prepare_dataset()
+
     with open(CLASS_NAMES_PATH, "w", encoding="utf-8") as file:
         file.write("\n".join(class_names))
 
@@ -41,36 +48,58 @@ def main():
             y_true.extend(labels.tolist())
 
     accuracy = accuracy_score(y_true, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_true, y_pred, average="weighted", zero_division=0
+    balanced_accuracy = balanced_accuracy_score(y_true, y_pred)
+
+    weighted_precision, weighted_recall, weighted_f1, _ = (
+        precision_recall_fscore_support(
+            y_true, y_pred, average="weighted", zero_division=0
+        )
     )
+    macro_precision, macro_recall, macro_f1, _ = (
+        precision_recall_fscore_support(
+            y_true, y_pred, average="macro", zero_division=0
+        )
+    )
+
     report = classification_report(
-        y_true, y_pred, target_names=class_names, digits=4, zero_division=0
+        y_true,
+        y_pred,
+        target_names=class_names,
+        digits=4,
+        zero_division=0,
     )
     matrix = confusion_matrix(y_true, y_pred)
 
     os.makedirs("outputs", exist_ok=True)
+
     with open("outputs/classification_report.txt", "w", encoding="utf-8") as file:
         file.write(
             f"Test samples: {len(y_true)}\n"
             f"Accuracy: {accuracy:.4f}\n"
-            f"Weighted Precision: {precision:.4f}\n"
-            f"Weighted Recall: {recall:.4f}\n"
-            f"Weighted F1: {f1:.4f}\n\n{report}"
+            f"Balanced Accuracy: {balanced_accuracy:.4f}\n"
+            f"Weighted Precision: {weighted_precision:.4f}\n"
+            f"Weighted Recall: {weighted_recall:.4f}\n"
+            f"Weighted F1: {weighted_f1:.4f}\n"
+            f"Macro Precision: {macro_precision:.4f}\n"
+            f"Macro Recall: {macro_recall:.4f}\n"
+            f"Macro F1: {macro_f1:.4f}\n\n"
+            f"{report}"
         )
 
     np.savetxt("outputs/confusion_matrix.csv", matrix, fmt="%d", delimiter=",")
 
-    fig, ax = plt.subplots(figsize=(8, 7))
+    fig, ax = plt.subplots(figsize=(11, 9))
     ax.imshow(matrix)
-    ax.set_title("Waste Classification Confusion Matrix")
+    ax.set_title("14-Class Waste Classification Confusion Matrix")
     ax.set_xlabel("Predicted label")
     ax.set_ylabel("True label")
-    ax.set_xticks(range(len(class_names)), class_names, rotation=45, ha="right")
+    ax.set_xticks(range(len(class_names)), class_names, rotation=55, ha="right")
     ax.set_yticks(range(len(class_names)), class_names)
+
     for row in range(matrix.shape[0]):
         for col in range(matrix.shape[1]):
-            ax.text(col, row, matrix[row, col], ha="center", va="center")
+            ax.text(col, row, matrix[row, col], ha="center", va="center", fontsize=8)
+
     fig.tight_layout()
     fig.savefig("outputs/confusion_matrix.png", dpi=180)
     plt.close(fig)
@@ -78,9 +107,13 @@ def main():
     print(f"Device: {device}")
     print(f"Test samples: {len(y_true)}")
     print(f"Accuracy: {accuracy:.4f}")
-    print(f"Weighted Precision: {precision:.4f}")
-    print(f"Weighted Recall: {recall:.4f}")
-    print(f"Weighted F1: {f1:.4f}")
+    print(f"Balanced Accuracy: {balanced_accuracy:.4f}")
+    print(f"Weighted Precision: {weighted_precision:.4f}")
+    print(f"Weighted Recall: {weighted_recall:.4f}")
+    print(f"Weighted F1: {weighted_f1:.4f}")
+    print(f"Macro Precision: {macro_precision:.4f}")
+    print(f"Macro Recall: {macro_recall:.4f}")
+    print(f"Macro F1: {macro_f1:.4f}")
     print("Saved results to: outputs")
 
 
