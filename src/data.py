@@ -198,12 +198,50 @@ def _prepare_fruit_waste(cache_root, rows, counts):
     if counts[(source, target)] >= 30:
         return
 
-    raise RuntimeError(
-        "Genuine fruit-waste images are required. Download the CC BY 4.0 "
-        "BDWaste dataset (Mendeley DOI 10.17632/96g5pgfnfw.1) and copy "
-        "banana-peel, mango-peel, lemon-peel, potato-peel or similar fruit-waste "
-        f"images into: {target_root}. At least 30 images are required."
-    )
+    # BDWaste is published on Mendeley Data (DOI 10.17632/96g5pgfnfw.1).
+    # The public page exposes a "Download All" archive, but Mendeley's
+    # download endpoint can require a browser/session. We therefore support
+    # the archive URL through an environment variable rather than hard-coding
+    # a fragile temporary URL.
+    archive_url = os.getenv("BDWASTE_DOWNLOAD_URL")
+    if archive_url:
+        import urllib.request
+        archive_path = cache_root / source / "bdwaste_download.zip"
+        if not archive_path.exists():
+            print("Downloading BDWaste fruit-waste source...")
+            urllib.request.urlretrieve(archive_url, archive_path)
+        extract_root = cache_root / source / "raw"
+        if not extract_root.exists():
+            with zipfile.ZipFile(archive_path, "r") as zf:
+                zf.extractall(extract_root)
+
+        fruit_terms = {
+            "banana_peel", "mango_peel", "lemon_peel", "potato_peel",
+            "malta_shell", "fruit_peel", "fruit_waste",
+        }
+        copied = 0
+        for path in extract_root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
+                continue
+            folder = _safe_name(path.parent.name)
+            stem = _safe_name(path.stem)
+            if not any(term in folder or term in stem for term in fruit_terms):
+                continue
+            destination = target_root / f"bdwaste_fruit_{copied:05d}.jpg"
+            with Image.open(path) as image:
+                _save_image(image, destination)
+            _add_file(rows, counts, source, target, destination, MAX_IMAGES_PER_SOURCE_CLASS)
+            copied += 1
+            if counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
+                break
+
+    if counts[(source, target)] < 30:
+        raise RuntimeError(
+            "BDWaste fruit-waste images are not available yet. Set the "
+            "BDWASTE_DOWNLOAD_URL environment variable to the public Mendeley "
+            "Download All archive URL, then rerun training. Genuine fruit-peel "
+            "images are required; ordinary fresh-fruit images are not accepted."
+        )
 
 
 def _build_manifest(cache_root):
