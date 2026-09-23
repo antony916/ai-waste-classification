@@ -83,31 +83,48 @@ def _prepare_trashnet(cache_root, rows, counts):
 
 
 def _prepare_cpoisson_targeted(cache_root, rows, counts):
-    source = "cpoisson_wood"
+    """Stream only the CPoisson categories needed for clothes and wood."""
+    source = "cpoisson_targeted"
+    target_map = {"textile_trash": "clothes", "wood": "wood"}
 
-    dataset_root = Path(
-        snapshot_download(
-            repo_id=CPOISSON_DATASET,
-            repo_type="dataset",
-            local_dir=str(cache_root / source / "raw"),
-            allow_patterns=[
-                "dataset/wood/*",
-                "dataset/textile_trash/*",
-            ],
-        )
+    dataset = load_dataset(
+        CPOISSON_DATASET,
+        split="train",
+        streaming=True,
     )
 
-    for path in dataset_root.rglob("*"):
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
-            _add_file(
-                rows,
-                counts,
-                source,
-                ("clothes" if "textile_trash" in str(path.parent) else "wood"),
-                path,
-                MAX_IMAGES_PER_SOURCE_CLASS,
-            )
+    for item in dataset:
+        label = _safe_name(item.get("label", ""))
+        target = target_map.get(label)
+        if not target or counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
+            if all(
+                counts[(source, name)] >= min(30, MAX_IMAGES_PER_SOURCE_CLASS)
+                for name in target_map.values()
+            ):
+                break
+            continue
 
+        destination = (
+            cache_root
+            / source
+            / target
+            / f"{source}_{target}_{counts[(source, target)]:05d}.jpg"
+        )
+        _save_image(item["image"], destination)
+        _add_file(
+            rows,
+            counts,
+            source,
+            target,
+            destination,
+            MAX_IMAGES_PER_SOURCE_CLASS,
+        )
+
+        if all(
+            counts[(source, name)] >= min(30, MAX_IMAGES_PER_SOURCE_CLASS)
+            for name in target_map.values()
+        ):
+            break
 
 def _prepare_huaweilin(cache_root, rows, counts):
     source = "huaweilin"
