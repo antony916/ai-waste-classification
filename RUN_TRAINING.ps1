@@ -24,4 +24,4 @@ Write-Host "Training finished. Starting evaluation..." -ForegroundColor Green
 Write-Host ""
 Write-Host "=== COMPLETE ===" -ForegroundColor Green
 Write-Host "Model: artifacts\waste_mobilenetv3.pth"
-Write-Host "Evaluation outputs: outputs\"
+Write-Host "Evaluation outputs: outputs folder"
