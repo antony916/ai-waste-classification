@@ -81,48 +81,8 @@ def _prepare_trashnet(cache_root, rows, counts):
                 _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
 
 
-def _prepare_kdkd(cache_root, rows, counts):
-    source = "kdkd1"
 
-    dataset_root = Path(
-        snapshot_download(
-            repo_id=KDKD_DATASET,
-            repo_type="dataset",
-            local_dir=str(cache_root / source / "raw"),
-            allow_patterns=[
-                "*.jpg",
-                "*.jpeg",
-                "*.png",
-                "*.webp",
-            ],
-        )
-    )
-
-    mapping = {
-        "cardboard": "cardboard",
-        "glass": "glass",
-        "metal": "metal",
-        "paper": "paper",
-        "plastic": "plastic",
-        "trash": "trash",
-        "biological": "food_vegetable_waste",
-        "battery": "batteries",
-        "clothes": "clothes",
-    }
-
-    for path in dataset_root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
-            continue
-
-        source_label = _safe_name(path.parent.name)
-        target = mapping.get(source_label)
-        if not target:
-            continue
-
-        _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
-
-
-def _prepare_cpoisson_wood(cache_root, rows, counts):
+def _prepare_cpoisson_targeted(cache_root, rows, counts):
     source = "cpoisson_wood"
 
     dataset_root = Path(
@@ -135,6 +95,8 @@ def _prepare_cpoisson_wood(cache_root, rows, counts):
                 "dataset/wood/*.jpeg",
                 "dataset/wood/*.png",
                 "dataset/wood/*.webp",
+                "dataset/textile_trash/*.jpg", "dataset/textile_trash/*.jpeg",
+                "dataset/textile_trash/*.png", "dataset/textile_trash/*.webp",
             ],
         )
     )
@@ -145,7 +107,7 @@ def _prepare_cpoisson_wood(cache_root, rows, counts):
                 rows,
                 counts,
                 source,
-                "wood",
+                ("clothes" if "textile_trash" in str(path.parent) else "wood"),
                 path,
                 MAX_IMAGES_PER_SOURCE_CLASS,
             )
@@ -268,9 +230,8 @@ def _build_manifest(cache_root):
     counts = defaultdict(int)
 
     _prepare_trashnet(cache_root, rows, counts)
-    _prepare_kdkd(cache_root, rows, counts)
     _prepare_huaweilin(cache_root, rows, counts)
-    _prepare_cpoisson_wood(cache_root, rows, counts)
+    _prepare_cpoisson_targeted(cache_root, rows, counts)
     _prepare_fruit_waste(cache_root, rows, counts)
 
     per_class = defaultdict(int)
