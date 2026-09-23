@@ -82,27 +82,38 @@ def _prepare_trashnet(cache_root, rows, counts):
 
 
 
-def _prepare_cpoisson_targeted(cache_root, rows, counts):
-    """Stream only the CPoisson categories needed for clothes and wood."""
-    source = "cpoisson_targeted"
-    target_map = {"textile_trash": "clothes", "wood": "wood"}
+def _prepare_textiles_wood(cache_root, rows, counts):
+    """Stream a compact waste-annotation dataset for clothes and wood only."""
+    source = "bower_targeted"
+    target_map = {"textiles": "clothes", "wood": "wood"}
 
+    # Bower contains real consumer-phone waste photos with explicit material
+    # annotations. Streaming avoids downloading the full image collection.
     dataset = load_dataset(
-        CPOISSON_DATASET,
+        "BowerApp/bower-waste-annotations",
         split="train",
         streaming=True,
     )
 
+    seen_images = set()
+    minimum_per_class = min(60, MAX_IMAGES_PER_SOURCE_CLASS)
+
     for item in dataset:
-        label = _safe_name(item.get("label", ""))
-        target = target_map.get(label)
+        material = _safe_name(item.get("material", ""))
+        target = target_map.get(material)
         if not target or counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
             if all(
-                counts[(source, name)] >= min(30, MAX_IMAGES_PER_SOURCE_CLASS)
+                counts[(source, name)] >= minimum_per_class
                 for name in target_map.values()
             ):
                 break
             continue
+
+        image_id = str(item.get("image_id", ""))
+        if image_id and image_id in seen_images:
+            continue
+        if image_id:
+            seen_images.add(image_id)
 
         destination = (
             cache_root
@@ -121,10 +132,19 @@ def _prepare_cpoisson_targeted(cache_root, rows, counts):
         )
 
         if all(
-            counts[(source, name)] >= min(30, MAX_IMAGES_PER_SOURCE_CLASS)
+            counts[(source, name)] >= minimum_per_class
             for name in target_map.values()
         ):
             break
+
+    missing = [
+        name for name in target_map.values()
+        if counts[(source, name)] < minimum_per_class
+    ]
+    if missing:
+        raise RuntimeError(
+            f"Could not prepare enough images for targeted classes: {missing}"
+        )
 
 def _prepare_huaweilin(cache_root, rows, counts):
     source = "huaweilin"
@@ -257,7 +277,7 @@ def _build_manifest(cache_root):
 
     _prepare_trashnet(cache_root, rows, counts)
     _prepare_huaweilin(cache_root, rows, counts)
-    _prepare_cpoisson_targeted(cache_root, rows, counts)
+    _prepare_textiles_wood(cache_root, rows, counts)
     _prepare_fruit_waste(cache_root, rows, counts)
 
     per_class = defaultdict(int)
