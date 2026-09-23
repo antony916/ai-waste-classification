@@ -198,26 +198,48 @@ def _prepare_fruit_waste(cache_root, rows, counts):
     if counts[(source, target)] >= 30:
         return
 
-    # BDWaste is a public Mendeley Data dataset (DOI 10.17632/96g5pgfnfw.1).
-    # Mendeley's public API provides short-lived file download locations, so
-    # the downloader uses the dataset page/API rather than a hard-coded URL.
-    # A user-provided archive URL remains supported as a fallback.
-    archive_url = os.getenv("BDWASTE_DOWNLOAD_URL")
-    if archive_url:
+    archive_path = cache_root / source / "bdwaste_download.zip"
+    extract_root = cache_root / source / "raw"
+
+    # Preferred: discover Mendeley's current public file endpoint from the
+    # dataset page. This avoids hard-coding an expiring signed URL.
+    if not archive_path.exists():
+        import re
         import urllib.request
-        archive_path = cache_root / source / "bdwaste_download.zip"
-        if not archive_path.exists():
+
+        archive_url = os.getenv("BDWASTE_DOWNLOAD_URL")
+        if not archive_url:
+            page_url = "https://data.mendeley.com/datasets/96g5pgfnfw/1"
+            try:
+                request = urllib.request.Request(
+                    page_url,
+                    headers={"User-Agent": "Mozilla/5.0"},
+                )
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    html = response.read().decode("utf-8", errors="ignore")
+                pattern = (
+                    r"https://data\.mendeley\.com/public-files/datasets/"
+                    r"96g5pgfnfw/files/[0-9a-f-]+/file_downloaded"
+                )
+                matches = list(dict.fromkeys(re.findall(pattern, html)))
+                if matches:
+                    archive_url = matches[0]
+            except Exception as exc:
+                print(f"BDWaste page discovery failed: {exc}")
+
+        if archive_url:
             print("Downloading BDWaste fruit-waste source...")
             urllib.request.urlretrieve(archive_url, archive_path)
-        extract_root = cache_root / source / "raw"
-        if not extract_root.exists():
-            with zipfile.ZipFile(archive_path, "r") as zf:
-                zf.extractall(extract_root)
 
-        fruit_terms = {
-            "banana_peel", "mango_peel", "lemon_peel", "potato_peel",
-            "malta_shell", "fruit_peel", "fruit_waste",
-        }
+    if archive_path.exists() and not extract_root.exists():
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            zf.extractall(extract_root)
+
+    fruit_terms = {
+        "banana_peel", "mango_peel", "lemon_peel", "potato_peel",
+        "malta_shell", "fruit_peel", "fruit_waste",
+    }
+    if extract_root.exists():
         copied = 0
         for path in extract_root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
@@ -236,9 +258,9 @@ def _prepare_fruit_waste(cache_root, rows, counts):
 
     if counts[(source, target)] < 30:
         raise RuntimeError(
-            "BDWaste fruit-waste images are unavailable. Set "
-            "BDWASTE_DOWNLOAD_URL to the current public Mendeley archive URL "
-            "and rerun training. Genuine fruit-peel waste images are required."
+            "Could not automatically obtain enough genuine BDWaste fruit-waste "
+            "images. Check internet access and retry training. The source is "
+            "BDWaste (Mendeley DOI 10.17632/96g5pgfnfw.1)."
         )
 
 def _build_manifest(cache_root):
