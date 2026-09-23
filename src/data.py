@@ -1,7 +1,10 @@
+import os
 import random
 import zipfile
 from collections import defaultdict
 from pathlib import Path
+
+os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 from PIL import Image
 from datasets import load_dataset
@@ -19,21 +22,21 @@ from config import (
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
-# Public sources used to expand the taxonomy:
+# Dataset sources used by the 14-class model:
 # - TrashNet: original six recyclable/residual classes.
-# - cpoisson/trash-optimizer-dataset: real-world cardboard, food organics,
-#   glass, metal, miscellaneous trash, paper, plastic, textile, vegetation,
-#   battery and wood.
-# - huaweilin/waste-classification: cleaned photos containing batteries,
-#   e-waste, paints/pesticides, food scraps, kitchen waste and yard trimmings.
-# - waste_pictures (Kaggle): genuine fruit-waste imagery such as watermelon rind.
+# - kdkd1/waste-garbage-management-dataset: cardboard, glass, metal, paper,
+#   plastic, trash, biological waste, batteries and clothes.
+# - huaweilin/waste-classification: batteries, e-waste, paints/pesticides,
+#   food scraps, kitchen waste and yard trimmings.
+# - cpoisson/trash-optimizer-dataset: ONLY its small wood subset.
+# - BDWaste: genuine fruit/vegetable peel waste for fruit_waste.
 #
-# The fruit-waste source is optional at code level but required before training:
-# the model must have actual fruit-waste examples rather than fresh-fruit photos.
+# We deliberately do not download the full CPoisson repository again because
+# that caused the Windows/Xet transfer failure seen during the previous run.
 
+KDKD_DATASET = "kdkd1/waste-garbage-management-dataset"
 CPOISSON_DATASET = "cpoisson/trash-optimizer-dataset"
 HUAWEILIN_DATASET = "huaweilin/waste-classification"
-FRUIT_KAGGLE_DATASET = "wangziang/waste-pictures"
 
 
 def _safe_name(value):
@@ -78,14 +81,12 @@ def _prepare_trashnet(cache_root, rows, counts):
                 _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
 
 
-def _prepare_cpoisson(cache_root, rows, counts):
-    source = "cpoisson"
+def _prepare_kdkd(cache_root, rows, counts):
+    source = "kdkd1"
 
-    # Download directly into the project cache instead of the HF global cache.
-    # This avoids Windows symlink privileges (WinError 1314) on local machines.
     dataset_root = Path(
         snapshot_download(
-            repo_id=CPOISSON_DATASET,
+            repo_id=KDKD_DATASET,
             repo_type="dataset",
             local_dir=str(cache_root / source / "raw"),
             allow_patterns=[
@@ -99,17 +100,14 @@ def _prepare_cpoisson(cache_root, rows, counts):
 
     mapping = {
         "cardboard": "cardboard",
-        "food_organics": "food_vegetable_waste",
         "glass": "glass",
         "metal": "metal",
-        "miscellaneous_trash": "trash",
         "paper": "paper",
         "plastic": "plastic",
-        "textile_trash": "clothes",
-        "vegetation": "leaves_organic",
+        "trash": "trash",
+        "biological": "food_vegetable_waste",
         "battery": "batteries",
-        "car_battery": "batteries",
-        "wood": "wood",
+        "clothes": "clothes",
     }
 
     for path in dataset_root.rglob("*"):
@@ -118,10 +116,39 @@ def _prepare_cpoisson(cache_root, rows, counts):
 
         source_label = _safe_name(path.parent.name)
         target = mapping.get(source_label)
-        if not target or counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
+        if not target:
             continue
 
         _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
+
+
+def _prepare_cpoisson_wood(cache_root, rows, counts):
+    source = "cpoisson_wood"
+
+    dataset_root = Path(
+        snapshot_download(
+            repo_id=CPOISSON_DATASET,
+            repo_type="dataset",
+            local_dir=str(cache_root / source / "raw"),
+            allow_patterns=[
+                "dataset/wood/*.jpg",
+                "dataset/wood/*.jpeg",
+                "dataset/wood/*.png",
+                "dataset/wood/*.webp",
+            ],
+        )
+    )
+
+    for path in dataset_root.rglob("*"):
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
+            _add_file(
+                rows,
+                counts,
+                source,
+                "wood",
+                path,
+                MAX_IMAGES_PER_SOURCE_CLASS,
+            )
 
 
 def _prepare_huaweilin(cache_root, rows, counts):
@@ -147,71 +174,36 @@ def _prepare_huaweilin(cache_root, rows, counts):
         target = mapping.get(source_label)
         if not target or counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
             continue
-        image = item["image"]
+
         destination = (
             cache_root
             / source
             / target
             / f"{source}_{target}_{index:06d}.jpg"
         )
-        _save_image(image, destination)
+        _save_image(item["image"], destination)
         _add_file(rows, counts, source, target, destination, MAX_IMAGES_PER_SOURCE_CLASS)
 
 
 def _prepare_fruit_waste(cache_root, rows, counts):
-    source = "waste_pictures"
+    source = "bdwaste"
     target = "fruit_waste"
-    existing = list((cache_root / source / target).glob("*.jpg"))
-    for path in existing[:MAX_IMAGES_PER_SOURCE_CLASS]:
-        _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
+    target_root = cache_root / source / target
+    target_root.mkdir(parents=True, exist_ok=True)
+
+    for path in sorted(target_root.iterdir()):
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
+            _add_file(rows, counts, source, target, path, MAX_IMAGES_PER_SOURCE_CLASS)
 
     if counts[(source, target)] >= 30:
         return
 
-    try:
-        import kagglehub
-        dataset_root = Path(kagglehub.dataset_download(FRUIT_KAGGLE_DATASET))
-    except Exception as exc:
-        raise RuntimeError(
-            "Fruit-waste images are required. The waste_pictures Kaggle dataset "
-            "contains a dedicated watermelon-rind waste class. Install kagglehub "
-            "and configure Kaggle access, or place the downloaded waste_pictures "
-            "folder under .cache/waste14/waste_pictures/."
-        ) from exc
-
-    candidates = []
-    for path in dataset_root.rglob("*"):
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
-            normalized = _safe_name(path.parent.name)
-            if "watermelon" in normalized and "rind" in normalized:
-                candidates.append(path)
-
-    if not candidates:
-        raise RuntimeError(
-            "Could not find the watermelon-rind class inside waste_pictures. "
-            "Place genuine fruit-waste images under .cache/waste14/"
-            "waste_pictures/fruit_waste/ and rerun training."
-        )
-
-    for index, path in enumerate(candidates):
-        if counts[(source, target)] >= MAX_IMAGES_PER_SOURCE_CLASS:
-            break
-        destination = (
-            cache_root
-            / source
-            / target
-            / f"{source}_{target}_{index:06d}.jpg"
-        )
-        if not destination.exists():
-            with Image.open(path) as image:
-                _save_image(image, destination)
-        _add_file(rows, counts, source, target, destination, MAX_IMAGES_PER_SOURCE_CLASS)
-
-    if counts[(source, target)] < 30:
-        raise RuntimeError(
-            f"Only {counts[(source, target)]} fruit-waste images were found. "
-            "At least 30 are required for a meaningful 14-class training run."
-        )
+    raise RuntimeError(
+        "Genuine fruit-waste images are required. Download the CC BY 4.0 "
+        "BDWaste dataset (Mendeley DOI 10.17632/96g5pgfnfw.1) and copy "
+        "banana-peel, mango-peel, lemon-peel, potato-peel or similar fruit-waste "
+        f"images into: {target_root}. At least 30 images are required."
+    )
 
 
 def _build_manifest(cache_root):
@@ -219,8 +211,9 @@ def _build_manifest(cache_root):
     counts = defaultdict(int)
 
     _prepare_trashnet(cache_root, rows, counts)
-    _prepare_cpoisson(cache_root, rows, counts)
+    _prepare_kdkd(cache_root, rows, counts)
     _prepare_huaweilin(cache_root, rows, counts)
+    _prepare_cpoisson_wood(cache_root, rows, counts)
     _prepare_fruit_waste(cache_root, rows, counts)
 
     per_class = defaultdict(int)
@@ -255,7 +248,11 @@ def prepare_dataset():
                 label, path = line.rstrip("\n").split("\t", 1)
                 if Path(path).exists():
                     rows.append((path, int(label)))
-        if rows and all(any(label == CLASS_NAMES.index(name) for _, label in rows) for name in CLASS_NAMES):
+
+        if rows and all(
+            any(label == CLASS_NAMES.index(name) for _, label in rows)
+            for name in CLASS_NAMES
+        ):
             return rows, CLASS_NAMES
 
     return _build_manifest(cache_root)
@@ -295,7 +292,6 @@ def split_rows(rows, seed=42):
     rows = list(rows)
     random.Random(seed).shuffle(rows)
 
-    # Stratified 80/10/10 split so every class is represented in each split.
     grouped = defaultdict(list)
     for row in rows:
         grouped[row[1]].append(row)
