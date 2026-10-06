@@ -43,20 +43,11 @@ st.markdown(
 [data-testid="stSidebar"] * { color: #EDF8F2 !important; }
 [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.12); }
 [data-testid="stSidebar"] [data-testid="stMetric"] {
-    background: #163B2C;
-    border: 1px solid #28513F;
-    border-radius: 14px;
+    background: #163B2C; border: 1px solid #28513F; border-radius: 14px;
 }
-[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
-    color: #B8D5C5 !important;
-}
-[data-testid="stSidebar"] [data-testid="stMetricValue"] {
-    color: #F3FFF8 !important;
-}
-[data-testid="stSidebar"] [data-testid="stMetricDelta"] {
-    color: #8BE0B2 !important;
-}
-
+[data-testid="stSidebar"] [data-testid="stMetricLabel"] { color: #B8D5C5 !important; }
+[data-testid="stSidebar"] [data-testid="stMetricValue"] { color: #F3FFF8 !important; }
+[data-testid="stSidebar"] [data-testid="stMetricDelta"] { color: #8BE0B2 !important; }
 .hero {
     position: relative; overflow: hidden;
     background: linear-gradient(135deg,#0D3A29 0%,#126B45 55%,#1A8C5A 100%);
@@ -72,10 +63,8 @@ st.markdown(
 }
 .hero h1 { margin: .9rem 0 .45rem; font-size: clamp(2rem,4vw,2.65rem); line-height: 1.08; font-weight: 800; }
 .hero p { max-width: 720px; margin: 0; font-size: 1.03rem; line-height: 1.55; color: rgba(255,255,255,.9); }
-
 .section-title { font-size: 1.25rem; font-weight: 800; color: var(--text); margin: 1.45rem 0 .55rem; }
 .section-subtitle { color: var(--muted); font-size: .92rem; line-height: 1.5; margin-bottom: .9rem; }
-
 .card,.stat-card,.step-card,.result-card { box-sizing: border-box; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 1.2rem 1.3rem; box-shadow: 0 8px 25px var(--shadow); }
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1rem 1.15rem; min-height: 96px; box-shadow: 0 6px 20px var(--shadow); }
@@ -85,14 +74,12 @@ st.markdown(
 .step-number { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: white; font-weight: 800; margin-bottom: .55rem; }
 .step-title { font-weight: 800; color: var(--text); }
 .step-text { color: var(--muted); font-size: .84rem; line-height: 1.45; margin-top: .2rem; }
-
 [data-testid="stFileUploader"] { background: var(--surface); border: 2px dashed var(--border); border-radius: 20px; padding: .65rem; box-shadow: 0 8px 25px var(--shadow); }
 [data-testid="stFileUploaderDropzone"] { background: var(--surface-soft); border-radius: 14px; }
 [data-testid="stFileUploader"] small,[data-testid="stFileUploader"] span,
 [data-testid="stFileUploader"] label,[data-testid="stFileUploader"] p { color: var(--text) !important; line-height: 1.35; }
 [data-testid="stFileUploader"] button { background: var(--accent) !important; color: #FFFFFF !important; border-color: var(--accent) !important; }
 [data-testid="stFileUploader"] button * { color: #FFFFFF !important; }
-
 .result-card { background: linear-gradient(135deg,var(--surface) 0%,var(--surface-soft) 100%); border: 1px solid var(--border); border-radius: 22px; padding: 1.35rem 1.45rem; box-shadow: 0 10px 28px var(--shadow); }
 .result-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .09em; font-weight: 800; }
 .result-name { color: var(--accent-dark); font-size: 2rem; line-height: 1.15; font-weight: 850; margin: .15rem 0 .65rem; overflow-wrap: anywhere; }
@@ -101,12 +88,10 @@ st.markdown(
 .info-box { background: var(--surface-soft); border: 1px solid var(--border); border-radius: 17px; padding: 1rem 1.1rem; color: var(--text); line-height: 1.55; }
 .warning-box { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: 17px; padding: 1rem 1.1rem; color: var(--warning-text); line-height: 1.55; }
 .footer-note { color: var(--muted); font-size: .78rem; line-height: 1.45; text-align: center; margin-top: 2.2rem; }
-
 [data-testid="stMetric"] { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: .55rem .75rem; }
 [data-testid="stMetricLabel"] { color: var(--muted) !important; }
 [data-testid="stMetricValue"] { color: var(--text) !important; }
 .stButton > button { border-radius: 12px; }
-
 @media (max-width: 760px) {
     .block-container { padding: 1rem 1rem 3rem; }
     .hero { padding: 1.6rem 1.35rem; border-radius: 22px; }
@@ -135,14 +120,11 @@ def get_model():
     model.eval()
     return model, classes, device
 
-
-transform = transforms.Compose(
-    [
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ]
-)
+transform = transforms.Compose([
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])
 
 tips = {
     "cardboard": "Keep cardboard clean and dry and place it in the appropriate recycling stream.",
@@ -161,35 +143,26 @@ tips = {
     "chemical_waste": "Treat this as potentially hazardous waste. Do not mix or pour it into drains; use an authorized hazardous-waste collection service.",
 }
 
-
 if not (ROOT / MODEL_PATH).exists():
     st.error("The trained model is not available yet.")
     st.code("python src/train.py\npython src/evaluate.py", language="powershell")
     st.stop()
 
-
 with st.sidebar:
     st.markdown("## ♻️ Waste AI")
     st.caption("AI-powered waste screening")
     st.markdown("---")
-
     st.markdown("### Model")
     st.write("**Architecture:** MobileNetV3-Large")
     st.write("**Input:** 224 × 224")
     st.write("**Classes:** 14")
     st.write("**Device:** CUDA" if torch.cuda.is_available() else "**Device:** CPU")
-
     st.markdown("---")
     st.markdown("### Test performance")
     st.metric("Test accuracy", "Pending retraining")
     st.caption("New 14-class metrics will appear after retraining.")
-
     st.markdown("---")
-    st.caption(
-        "Educational prototype. Classification and disposal guidance are general "
-        "information; follow local municipal recycling rules."
-    )
-
+    st.caption("Educational prototype. Classification and disposal guidance are general information; follow local municipal recycling rules.")
 
 st.markdown(
     """
@@ -202,7 +175,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 c1, c2, c3, c4 = st.columns(4)
 stats = [
     ("Model", "MobileNetV3-Large"),
@@ -213,17 +185,12 @@ stats = [
 for col, (label, value) in zip((c1, c2, c3, c4), stats):
     with col:
         st.markdown(
-            f"<div class='stat-card'><div class='stat-label'>{label}</div>"
-            f"<div class='stat-value'>{value}</div></div>",
+            f"<div class='stat-card'><div class='stat-label'>{label}</div><div class='stat-value'>{value}</div></div>",
             unsafe_allow_html=True,
         )
 
-
 st.markdown("<div class='section-title'>How it works</div>", unsafe_allow_html=True)
-st.markdown(
-    "<div class='section-subtitle'>A simple four-stage computer-vision pipeline.</div>",
-    unsafe_allow_html=True,
-)
+st.markdown("<div class='section-subtitle'>A simple four-stage computer-vision pipeline.</div>", unsafe_allow_html=True)
 steps = [
     ("1", "Upload", "Choose a clear waste image."),
     ("2", "Preprocess", "Resize and normalize the image."),
@@ -234,74 +201,49 @@ step_cols = st.columns(4)
 for col, (number, title, description) in zip(step_cols, steps):
     with col:
         st.markdown(
-            f"<div class='step-card'><div class='step-number'>{number}</div>"
-            f"<div class='step-title'>{title}</div>"
-            f"<div class='step-text'>{description}</div></div>",
+            f"<div class='step-card'><div class='step-number'>{number}</div><div class='step-title'>{title}</div><div class='step-text'>{description}</div></div>",
             unsafe_allow_html=True,
         )
 
-
 st.markdown("<div class='section-title'>Upload a waste image</div>", unsafe_allow_html=True)
-st.markdown(
-    "<div class='section-subtitle'>For the clearest result, use a well-lit image where one main waste item is visible.</div>",
-    unsafe_allow_html=True,
-)
-uploaded = st.file_uploader(
-    "Choose a JPG or PNG image",
-    type=["jpg", "jpeg", "png"],
-    help="Use a clear, well-lit image with the waste item clearly visible.",
-)
+st.markdown("<div class='section-subtitle'>For the clearest result, use a well-lit image where one main waste item is visible.</div>", unsafe_allow_html=True)
+uploaded = st.file_uploader("Choose a JPG or PNG image", type=["jpg", "jpeg", "png"], help="Use a clear, well-lit image with the waste item clearly visible.")
 
 if not uploaded:
-    st.markdown(
-        "<div class='info-box'><b>Ready to analyze.</b><br>"
-        "Upload an image above to start the AI classification.</div>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("<div class='info-box'><b>Ready to analyze.</b><br>Upload an image above to start the AI classification.</div>", unsafe_allow_html=True)
 else:
     image = Image.open(uploaded).convert("RGB")
-
     st.markdown("<div class='section-title'>Analysis</div>", unsafe_allow_html=True)
     left, right = st.columns([1.02, 1], gap="large")
-
     with left:
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         st.image(image, caption="Uploaded waste image", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
-
     with right:
         progress = st.progress(0)
         status = st.empty()
-
         status.markdown("🔍 **Checking the uploaded image...**")
         progress.progress(15)
         time.sleep(0.25)
-
         status.markdown("🧹 **Preprocessing the waste image...**")
         progress.progress(35)
         time.sleep(0.25)
-
         model, classes, device = get_model()
         x = transform(image).unsqueeze(0).to(device)
         progress.progress(55)
-
         status.markdown("🧠 **Classifying with MobileNetV3-Large...**")
         progress.progress(70)
-
         with torch.inference_mode():
             probs = torch.softmax(model(x), dim=1)[0]
             values, indices = torch.topk(probs, k=min(5, len(classes)))
-
         progress.progress(90)
         status.markdown("📊 **Preparing your results...**")
         time.sleep(0.25)
         progress.progress(100)
         status.success("✅ **Analysis complete**")
-
         top_idx = int(indices[0])
         label = classes[top_idx]
         confidence = float(values[0]) * 100
-
         st.markdown(
             f"""
 <div class="result-card">
@@ -314,13 +256,8 @@ else:
 """,
             unsafe_allow_html=True,
         )
-
     st.markdown("<div class='section-title'>Prediction breakdown</div>", unsafe_allow_html=True)
-    st.markdown(
-        "<div class='section-subtitle'>The model's five highest probability classes.</div>",
-        unsafe_allow_html=True,
-    )
-
+    st.markdown("<div class='section-subtitle'>The model's five highest probability classes.</div>", unsafe_allow_html=True)
     for rank, (score, idx) in enumerate(zip(values.tolist(), indices.tolist()), 1):
         col1, col2 = st.columns([4.5, 1])
         with col1:
@@ -328,23 +265,11 @@ else:
             st.progress(float(score))
         with col2:
             st.metric("Score", f"{score * 100:.2f}%")
-
     st.markdown("<div class='section-title'>♻️ Disposal guidance</div>", unsafe_allow_html=True)
-    st.markdown(
-        f"<div class='info-box'><b>{label.title()}</b><br>{tips.get(label, 'Follow local waste-management guidance.')}</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        "<div class='warning-box'><b>Important:</b> AI classification is a screening aid. "
-        "Waste rules vary by municipality, material condition, contamination, and local collection systems. "
-        "Verify disposal instructions locally.</div>",
-        unsafe_allow_html=True,
-    )
-
+    st.markdown(f"<div class='info-box'><b>{label.title()}</b><br>{tips.get(label, 'Follow local waste-management guidance.')}</div>", unsafe_allow_html=True)
+    st.markdown("<div class='warning-box'><b>Important:</b> AI classification is a screening aid. Waste rules vary by municipality, material condition, contamination, and local collection systems. Verify disposal instructions locally.</div>", unsafe_allow_html=True)
 
 st.markdown(
-    "<div class='footer-note'>AI-Based Waste Classification • Educational prototype • "
-    "MobileNetV3-Large • 92.49% test accuracy</div>",
+    "<div class='footer-note'>AI-Based Waste Classification • Educational prototype • MobileNetV3-Large • Final test metrics: pending 14-class evaluation</div>",
     unsafe_allow_html=True,
 )
